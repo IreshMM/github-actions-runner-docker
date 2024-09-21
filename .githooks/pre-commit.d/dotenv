@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+DOT_ENV_FILE=.env
+
+main() {
+    # Generating .env.example
+    generate_env_example
+}
+
+generate_env_example () {
+    if [ -f $DOT_ENV_FILE ]; then
+        sed 's/^\([^=]*=\)\(\S*\)\s\+\(.*\)$/\1 \3/1' $DOT_ENV_FILE > .env.example
+    fi
+}
+
+main "$@"

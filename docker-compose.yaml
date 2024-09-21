@@ -1,0 +1,15 @@
+services:
+  runner:
+    build: .
+    image: ghcr.io/ireshmm/actions-runner:latest
+    env_file:
+      - .env
+    environment:
+      - ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    group_add:
+      - 988
+    deploy:
+      mode: replicated
+      replicas: 1

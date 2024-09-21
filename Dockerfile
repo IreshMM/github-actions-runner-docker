@@ -16,6 +16,12 @@ RUN apt-get update \
  && apt-get clean \
  && rm -r /var/lib/apt/lists/*
 
-COPY wait_for_docker_then_run.sh /usr/local/bin/wait_for_docker_then_run.sh
+COPY --chown=runner:docker utils.sh entrypoint.sh /
 
 USER runner
+
+ENV RUNNER_WORKDIR=/home/runner/work
+
+RUN mkdir -p ${RUNNER_WORKDIR}
+
+ENTRYPOINT [ "/entrypoint.sh" ]

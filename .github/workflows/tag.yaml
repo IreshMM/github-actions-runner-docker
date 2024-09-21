@@ -11,32 +11,28 @@ on:
 
 jobs:
   tag:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-    # We need to use an external PAT here because GHA will not run downstream events if we use the built in token.
-    - name: Checkout
-      uses: mobilecoinofficial/gh-actions/checkout@v0
-      with:
-        token: ${{ secrets.ACTIONS_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+      - env:
+          MESSAGE: ${{ github.event.head_commit.message }}
+        shell: bash
+        run: |
+          # look for sting like "[tag/v2.312.0]" in commit message.
+          regex=".*\[tag/(.*)\].*"
 
-    - name: Get new tag from commit and push
-      shell: bash
-      env:
-        MESSAGE: ${{ github.event.head_commit.message }}
-      run: |
-        # look for sting like "[tag/v2.312.0]" in commit message.
-        regex=".*\[tag/(.*)\].*"
-
-        if [[ "${MESSAGE}" =~ $regex ]]
-        then
-            tag="${BASH_REMATCH[1]}"
-            # remove v prefix if it exists.
-            tag="${tag/#v/}"
-            echo "Found tag: ${tag}"
-            git tag --force "${tag}"
-            git push --tags --force
-        else
-          echo "Could not find tag in commit message"
-          echo "${MESSAGE}"
-          exit 0
-        fi
+          if [[ "${MESSAGE}" =~ $regex ]]
+          then
+              tag="${BASH_REMATCH[1]}"
+              # remove v prefix if it exists.
+              tag="${tag/#v/}"
+              echo "Found tag: ${tag}"
+              git tag --force "${tag}"
+              git push --tags --force
+          else
+            echo "Could not find tag in commit message"
+            echo "${MESSAGE}"
+            exit 0
+          fi

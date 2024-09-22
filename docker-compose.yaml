@@ -1,7 +1,7 @@
 services:
   runner:
     build: .
-    image: ghcr.io/ireshmm/actions-runner:latest
+    image: docker.io/ireshmm/gha-runner:latest
     env_file:
       - .env
     environment:

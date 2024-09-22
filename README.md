@@ -1,6 +1,6 @@
-# gha-runner
+# GitHub Actions Runner Docker Image
 
-Automated updated builds starting with `ghcr.io/actions/actions-runner` image. Adds with utilities installed so actions actually work.
+FROM official upstream K8S ARC `ghcr.io/actions/actions-runner` image. Adds utilities so actions actually work. Adds an entrypoint for use with `docker run` and `docker compose`. This is a fork of the [actions-runner](https://github.com/mobilecoinofficial/gha-runner) and work is also based on [marcel-dempers-guide](https://github.com/marcel-dempers/docker-development-youtube-series/tree/master/github/actions/self-hosted-runner).
 
 Adds the following packages to the base image.
 
@@ -16,67 +16,31 @@ zip
 unzip
 ```
 
-### How to use
-
-Replace `ghcr.io/actions/actions-runner` with `mobilecoin/gha-runner` in your `gha-runner-scale-set` helm releases.
-
-Example `values.yaml`.  See the [gha-runner-scale-set docs](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller/deploying-runner-scale-sets-with-actions-runner-controller#using-advanced-configuration-options) for full details on customizing your install.
+# How to use
+### Docker Compose
 
 ```yaml
-runnerScaleSetName: dev-small-x64
-githubConfigUrl: https://github.com/<GitHub Org>
-githubConfigSecret: <GitHub App Secret>
-maxRunners: 25
-minRunners: 0
-runnerGroup: default
-
-template:
-  spec:
-    imagePullSecrets:
-    - name: docker-credentials
-    initContainers:
-    - name: init-dind-externals
-      image: mobilecoin/gha-runner:latest
-      command: ["cp", "-r", "-v", "/home/runner/externals/.", "/home/runner/tmpDir/"]
-      volumeMounts:
-      - name: dind-externals
-        mountPath: /home/runner/tmpDir
-    containers:
-    - name: runner
-      image: mobilecoin/gha-runner:latest
-      command: ["/home/runner/run.sh"]
-      env:
-      - name: DOCKER_HOST
-        value: unix:///run/docker/docker.sock
-      volumeMounts:
-      - name: work
-        mountPath: /home/runner/_work
-      - name: dind-sock
-        mountPath: /run/docker
-        readOnly: true
-    - name: dind
-      image: docker:dind
-      args:
-      - dockerd
-      - --host=unix:///run/docker/docker.sock
-      - --group=$(DOCKER_GROUP_GID)
-      env:
-      - name: DOCKER_GROUP_GID
-        value: "123"
-      securityContext:
-        privileged: true
-      volumeMounts:
-      - name: work
-        mountPath: /home/runner/_work
-      - name: dind-sock
-        mountPath: /run/docker
-      - name: dind-externals
-        mountPath: /home/runner/externals
+services:
+  runner:
+    image: docker.io/ireshmm/gha-runner:latest
+    env_file:
+      - .env
+    environment:
+      - ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=0
     volumes:
-    - name: work
-      emptyDir: {}
-    - name: dind-sock
-      emptyDir: {}
-    - name: dind-externals
-      emptyDir: {}
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    group_add:
+      - 988 # Make sure to change this to the group id of the docker group on your host
+    deploy:
+      mode: replicated
+      replicas: 1
+```
+
+#### .env file
+```bash
+RUNNER_SCOPE= # ORG or REPO
+GITHUB_OWNER= # ORG or USER
+GITHUB_REPO= # REPO if RUNNER_SCOPE=REPO
+GITHUB_TOKEN= # Access token for obtaining runner registration token
+RUNNER_LABELS= # Labels for the runner, comma separated
 ```

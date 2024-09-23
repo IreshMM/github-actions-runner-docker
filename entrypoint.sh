@@ -3,9 +3,7 @@
 source /utils.sh
 
 export RUNNER_TOKEN=$(get_registration_token)
-echo "Runner token: ${RUNNER_TOKEN}"
 export OWNER_URL=$(get_owner_url)
-echo "Owner URL: ${OWNER_URL}"
 
 ./config.sh \
     --name "$(hostname)" \

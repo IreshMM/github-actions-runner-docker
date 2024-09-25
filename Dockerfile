@@ -13,6 +13,7 @@ RUN apt-get update \
   git \
   zip \
   unzip \
+  maven \
  && apt-get clean \
  && rm -r /var/lib/apt/lists/*
 
